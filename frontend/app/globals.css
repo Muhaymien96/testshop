@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* small helpers for testing/visibility */
+.test-data {
+  outline: 1px dashed rgba(99, 102, 241, 0.25);
+}
