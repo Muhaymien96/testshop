@@ -35,7 +35,7 @@ jobs:
       - name: Build and push backend image to GHCR
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./backend
           file: docker/Dockerfile.backend
           platforms: linux/amd64,linux/arm64
           push: true
@@ -46,7 +46,7 @@ jobs:
       - name: Build and push frontend image to GHCR
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./frontend
           file: docker/Dockerfile.frontend
           platforms: linux/amd64,linux/arm64
           push: true
@@ -55,13 +55,12 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
 
       - name: Optionally push images to Docker Hub
-        if: secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
         env:
           DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
           DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           echo "Logging in to Docker Hub as $DH_USER"
-          echo $DH_TOKEN | docker login --username $DH_USER --password-stdin
+          echo "$DH_TOKEN" | docker login --username "$DH_USER" --password-stdin
           docker tag ghcr.io/${{ github.repository_owner }}/${{ env.BACKEND_IMAGE_NAME }}:latest $DH_USER/${{ env.BACKEND_IMAGE_NAME }}:latest
           docker tag ghcr.io/${{ github.repository_owner }}/${{ env.FRONTEND_IMAGE_NAME }}:latest $DH_USER/${{ env.FRONTEND_IMAGE_NAME }}:latest
           docker push $DH_USER/${{ env.BACKEND_IMAGE_NAME }}:latest
@@ -71,4 +70,3 @@ jobs:
         run: |
           echo "GHCR backend: ghcr.io/${{ github.repository_owner }}/${{ env.BACKEND_IMAGE_NAME }}:latest"
           echo "GHCR frontend: ghcr.io/${{ github.repository_owner }}/${{ env.FRONTEND_IMAGE_NAME }}:latest"
-          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]; then echo "Docker Hub images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.BACKEND_IMAGE_NAME }}:latest and ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FRONTEND_IMAGE_NAME }}:latest"; fi
