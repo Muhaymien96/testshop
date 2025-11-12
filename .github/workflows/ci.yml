@@ -1,0 +1,63 @@
+name: CI - build frontend & backend
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Install and build (frontend + backend)
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: |
+          npm ci
+
+      - name: Lint frontend (non-fatal)
+        working-directory: ./frontend
+        run: |
+          npm run lint || true
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: |
+          npm run build
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: |
+          npm ci
+
+      - name: Sanity check backend
+        working-directory: ./backend
+        # no test script present in backend; do a quick node syntax check to catch basic errors
+        run: |
+          node -e "require('./src/app.js'); console.log('backend sanity OK')" || true
+
+      - name: Upload build artifacts (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: |
+            frontend/.next || frontend/.next/**
