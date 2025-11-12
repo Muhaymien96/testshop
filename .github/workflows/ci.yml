@@ -36,6 +36,14 @@ jobs:
             npm install
           fi
 
+      - name: Rebuild native modules (fix lightningcss binding)
+        working-directory: ./frontend
+        run: |
+          # Attempt to rebuild lightningcss native bindings which Turbopack needs
+          npm rebuild lightningcss || true
+          # As a fallback, rebuild all native modules
+          npm rebuild || true
+
       - name: Lint frontend (non-fatal)
         working-directory: ./frontend
         run: |
